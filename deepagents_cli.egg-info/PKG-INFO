@@ -1,0 +1,34 @@
+Metadata-Version: 2.4
+Name: deepagents-cli
+Version: 0.0.9
+Summary: Deepagents CLI
+License: MIT
+Requires-Python: <4.0,>=3.11
+Description-Content-Type: text/markdown
+Requires-Dist: deepagents==0.2.7
+Requires-Dist: requests
+Requires-Dist: rich>=13.0.0
+Requires-Dist: prompt-toolkit>=3.0.52
+Requires-Dist: langchain-openai>=0.1.0
+Requires-Dist: tavily-python
+Requires-Dist: python-dotenv
+Requires-Dist: daytona>=0.113.0
+Requires-Dist: modal>=0.65.0
+Requires-Dist: markdownify>=0.13.0
+Requires-Dist: langchain>=1.0.7
+
+# deepagents cli
+
+This is the CLI for deepagents
+
+## Development
+
+### Running Tests
+
+To run the test suite:
+
+```bash
+uv sync --all-groups
+
+make test
+```
