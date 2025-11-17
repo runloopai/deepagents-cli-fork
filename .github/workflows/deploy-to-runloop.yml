@@ -1,0 +1,46 @@
+name: Deploy to Runloop
+
+on:
+  push:
+    branches:
+      - main
+  release:
+    types: [published]
+  workflow_dispatch:  # Allow manual triggering
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set agent name
+        id: set-name
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            echo "name=deepagents-cli-${{ github.event.release.tag_name }}" >> $GITHUB_OUTPUT
+          else
+            echo "name=deepagents-cli" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Deploy agent to Runloop
+        id: deploy
+        uses: runloopai/deploy-agent@v1
+        with:
+          api-key: ${{ secrets.RUNLOOP_API_KEY }}
+          source-type: git
+          agent-name: ${{ steps.set-name.outputs.name }}
+          setup-commands: |
+            python -m venv .venv && source .venv/bin/activate && pip install -e . && echo 'alias deepagents="/home/user/agent/.venv/bin/deepagents --auto-approve"' >> ~/.bashrc
+
+      - name: Display deployment info
+        if: success()
+        run: |
+          echo "Agent deployed successfully!"
+          echo "Agent ID: ${{ steps.deploy.outputs.agent-id }}"
+          echo "Agent Name: ${{ steps.deploy.outputs.agent-name }}"
+          if [ -n "${{ steps.deploy.outputs.object-id }}" ]; then
+            echo "Object ID: ${{ steps.deploy.outputs.object-id }}"
+          fi
+
