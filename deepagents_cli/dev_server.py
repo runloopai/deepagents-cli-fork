@@ -54,8 +54,8 @@ def add_dev_parser(subparsers: argparse._SubParsersAction) -> None:
     # LangGraph dev server options
     dev_parser.add_argument(
         "--host",
-        default="127.0.0.1",
-        help="Network interface to bind the development server to (default: 127.0.0.1)",
+        default="0.0.0.0",
+        help="Network interface to bind the development server to (default: 0.0.0.0)",
     )
     dev_parser.add_argument(
         "--port",
