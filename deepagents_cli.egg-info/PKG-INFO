@@ -16,6 +16,8 @@ Requires-Dist: daytona>=0.113.0
 Requires-Dist: modal>=0.65.0
 Requires-Dist: markdownify>=0.13.0
 Requires-Dist: langchain>=1.0.7
+Requires-Dist: langgraph-cli>=0.4.7
+Requires-Dist: langgraph-api>=0.5.13
 
 # deepagents cli
 

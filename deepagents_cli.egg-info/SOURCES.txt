@@ -8,6 +8,7 @@ deepagents_cli/agent_memory.py
 deepagents_cli/commands.py
 deepagents_cli/config.py
 deepagents_cli/default_agent_prompt.md
+deepagents_cli/dev_server.py
 deepagents_cli/execution.py
 deepagents_cli/file_ops.py
 deepagents_cli/input.py

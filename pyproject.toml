@@ -17,6 +17,8 @@ dependencies = [
   "modal>=0.65.0",
   "markdownify>=0.13.0",
   "langchain>=1.0.7",
+  "langgraph-cli>=0.4.7",
+  "langgraph-api>=0.5.13",
 ]
 
 [project.scripts]
