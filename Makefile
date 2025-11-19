@@ -44,7 +44,63 @@ format format_diff:
 
 format_unsafe:
 	[ "$(PYTHON_FILES)" = "" ] || uv run ruff format --unsafe-fixes $(PYTHON_FILES)
-	
+
+
+######################
+# BUILD
+######################
+
+build:
+	@echo "Building standalone executable with PyInstaller..."
+	@echo "Installing PyInstaller..."
+	@uv pip install --quiet pyinstaller
+	@echo "Building executable..."
+	@uv run pyinstaller --onefile --name deepagents \
+		--collect-all deepagents \
+		--collect-all deepagents_cli \
+		--collect-all langchain \
+		--collect-all langchain_core \
+		--collect-all langchain_anthropic \
+		--collect-all langgraph \
+		--hidden-import=deepagents_cli \
+		--hidden-import=deepagents_cli.main \
+		--hidden-import=deepagents_cli.dev_server \
+		deepagents_cli/__main__.py
+	@echo "✓ Built: dist/deepagents"
+	@echo "Run with: ./dist/deepagents --help"
+
+build-dir:
+	@echo "Building directory-based executable with PyInstaller..."
+	@echo "Installing PyInstaller..."
+	@uv pip install --quiet pyinstaller
+	@echo "Building executable..."
+	@uv run pyinstaller --onedir --name deepagents \
+		--collect-all deepagents \
+		--collect-all deepagents_cli \
+		--collect-all langchain \
+		--collect-all langchain_core \
+		--collect-all langchain_anthropic \
+		--collect-all langgraph \
+		--hidden-import=deepagents_cli \
+		--hidden-import=deepagents_cli.main \
+		--hidden-import=deepagents_cli.dev_server \
+		deepagents_cli/__main__.py
+	@echo "✓ Built: dist/deepagents/"
+	@echo "Run with: ./dist/deepagents/deepagents --help"
+
+clean:
+	@echo "Cleaning build artifacts..."
+	@rm -rf build dist *.spec deepagents.pyz
+	@echo "✓ Cleaned"
+
+build-linux:
+	@echo "Building Linux executable using Docker..."
+	@docker build -t deepagents-builder .
+	@docker create --name deepagents-tmp deepagents-builder
+	@docker cp deepagents-tmp:/app/dist/deepagents ./dist/deepagents-linux
+	@docker rm deepagents-tmp
+	@echo "✓ Built: dist/deepagents-linux"
+	@echo "Transfer to Linux with: scp dist/deepagents-linux user@host:/path/"
 
 ######################
 # HELP
@@ -58,6 +114,11 @@ help:
 	@echo '-- TESTS --'
 	@echo 'test                         - run unit tests'
 	@echo 'test TEST_FILE=<test_file>   - run all tests in file'
+	@echo '-- BUILD --'
+	@echo 'build                        - build standalone executable for current platform (single file)'
+	@echo 'build-dir                    - build directory-based executable (faster startup)'
+	@echo 'build-linux                  - build Linux executable using Docker (from macOS/Windows)'
+	@echo 'clean                        - remove build artifacts'
 	@echo '-- DOCUMENTATION tasks are from the top-level Makefile --'
 
 

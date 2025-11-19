@@ -8,7 +8,15 @@ __pycache__/
 *$py.class
 *.so
 .Python
+
+# Build artifacts
 *.pyz
+build/
+dist/
+*.spec
+*.egg-info/
+deepagents-linux
+deepagents-macos
 
 # LangGraph files
 .langgraph_api/
