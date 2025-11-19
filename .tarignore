@@ -1,0 +1,49 @@
+# Python cache
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+*$py.class
+*.so
+
+# Build artifacts
+build
+dist
+*.spec
+*.egg-info
+*.pyz
+deepagents-linux
+deepagents-macos
+
+# Virtual environments
+.venv
+venv
+ENV
+env
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git
+.gitignore
+
+# LangGraph
+.langgraph_api
+
+# Tests
+tests
+
+# CI/CD
+.github
+
+# Claude
+.claude

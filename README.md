@@ -49,10 +49,70 @@ make build-linux
 # Transfer to Linux: scp dist/deepagents-linux user@host:/path/
 ```
 
+**Package source files** (create distributable tar.gz):
+```bash
+make package
+# Creates: dist/deepagents-cli-source.tar.gz
+```
+
 **Clean build artifacts**:
 ```bash
 make clean
 ```
+
+### Distribution Options
+
+There are two ways to package the application:
+
+#### Option 1: Source Package (Recommended for Cross-Platform)
+
+Creates a clean tar.gz with only source files (~259KB, platform-independent):
+
+```bash
+make package
+```
+
+**What's included:**
+- Source code (`deepagents_cli/`)
+- Dependencies (`pyproject.toml`, `uv.lock`)
+- Documentation and build tools
+
+**Usage:**
+```bash
+# On any platform
+tar -xzf deepagents-cli-source.tar.gz
+cd deepagents-cli-standalone
+make build
+./dist/deepagents help
+```
+
+#### Option 2: Runtime Package (Ready-to-Run)
+
+Creates a complete runtime with virtual environment (~52MB, platform-specific):
+
+```bash
+make package-runtime
+```
+
+**What's included:**
+- Source code
+- Complete `.venv/` with all dependencies installed
+- `run.sh` convenience script
+
+**Usage:**
+```bash
+# Extract and run immediately (no build required)
+tar -xzf deepagents-cli-runtime.tar.gz
+./run.sh --help
+./run.sh --auto-approve
+./run.sh dev --allow-blocking
+
+# Or manually activate venv
+source .venv/bin/activate
+python -m deepagents_cli --help
+```
+
+⚠️ **Important**: Runtime package only works on the same OS/architecture as the build machine.
 
 ### Cross-Platform Builds
 

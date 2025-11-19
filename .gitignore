@@ -17,6 +17,9 @@ dist/
 *.egg-info/
 deepagents-linux
 deepagents-macos
+*.tar.gz
+*.tar
+*.zip
 
 # LangGraph files
 .langgraph_api/

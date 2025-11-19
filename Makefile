@@ -102,6 +102,64 @@ build-linux:
 	@echo "✓ Built: dist/deepagents-linux"
 	@echo "Transfer to Linux with: scp dist/deepagents-linux user@host:/path/"
 
+package:
+	@echo "Packaging application source files..."
+	@mkdir -p dist
+	@tar --exclude-from=.tarignore -czf dist/deepagents-cli-source.tar.gz \
+		deepagents_cli/ \
+		pyproject.toml \
+		uv.lock \
+		README.md \
+		Makefile \
+		Dockerfile
+	@echo "✓ Created: dist/deepagents-cli-source.tar.gz"
+	@echo "Extract with: tar -xzf deepagents-cli-source.tar.gz"
+
+package-runtime:
+	@echo "Packaging complete runtime (includes venv, platform-specific)..."
+	@if [ ! -d .venv ]; then \
+		echo "Error: .venv not found. Run 'uv sync' first."; \
+		exit 1; \
+	fi
+	@mkdir -p dist
+	@chmod +x run.sh
+	@echo "This may take a while (venv is large)..."
+	@tar -czf dist/deepagents-cli-runtime.tar.gz \
+		--exclude='*.pyc' \
+		--exclude='*.pyo' \
+		--exclude='__pycache__' \
+		--exclude='.DS_Store' \
+		--exclude='build' \
+		--exclude='dist' \
+		--exclude='*.spec' \
+		--exclude='.git' \
+		--exclude='.github' \
+		--exclude='.vscode' \
+		--exclude='.idea' \
+		--exclude='tests' \
+		--exclude='.langgraph_api' \
+		deepagents_cli/ \
+		.venv/ \
+		pyproject.toml \
+		uv.lock \
+		README.md \
+		Makefile \
+		Dockerfile \
+		run.sh
+	@ls -lh dist/deepagents-cli-runtime.tar.gz
+	@echo "✓ Created: dist/deepagents-cli-runtime.tar.gz"
+	@echo ""
+	@echo "⚠️  WARNING: This package is platform-specific!"
+	@echo "   Only extract on same OS/architecture as build machine"
+	@echo ""
+	@echo "To run after extraction:"
+	@echo "  tar -xzf deepagents-cli-runtime.tar.gz"
+	@echo "  ./run.sh --help              # easiest method"
+	@echo ""
+	@echo "Or manually:"
+	@echo "  source .venv/bin/activate    # or .venv/Scripts/activate on Windows"
+	@echo "  python -m deepagents_cli --help"
+
 ######################
 # HELP
 ######################
@@ -118,6 +176,9 @@ help:
 	@echo 'build                        - build standalone executable for current platform (single file)'
 	@echo 'build-dir                    - build directory-based executable (faster startup)'
 	@echo 'build-linux                  - build Linux executable using Docker (from macOS/Windows)'
+	@echo '-- PACKAGE --'
+	@echo 'package                      - create tar.gz with source only (~259KB, platform-independent)'
+	@echo 'package-runtime              - create tar.gz with venv included (~300MB, platform-specific)'
 	@echo 'clean                        - remove build artifacts'
 	@echo '-- DOCUMENTATION tasks are from the top-level Makefile --'
 
