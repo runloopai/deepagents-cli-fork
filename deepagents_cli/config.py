@@ -5,6 +5,8 @@ import sys
 from pathlib import Path
 
 import dotenv
+from langchain_anthropic import ChatAnthropic
+from langchain_openai import ChatOpenAI
 from rich.console import Console
 
 dotenv.load_dotenv()
@@ -93,16 +95,12 @@ def create_model():
     anthropic_key = os.environ.get("ANTHROPIC_API_KEY")
 
     if openai_key:
-        from langchain_openai import ChatOpenAI
-
         model_name = os.environ.get("OPENAI_MODEL", "gpt-5-mini")
         console.print(f"[dim]Using OpenAI model: {model_name}[/dim]")
         return ChatOpenAI(
             model=model_name,
         )
     if anthropic_key:
-        from langchain_anthropic import ChatAnthropic
-
         model_name = os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-5-20250929")
         console.print(f"[dim]Using Anthropic model: {model_name}[/dim]")
         return ChatAnthropic(

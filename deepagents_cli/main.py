@@ -7,7 +7,12 @@ from pathlib import Path
 
 from deepagents.backends.protocol import SandboxBackendProtocol
 
-from deepagents_cli.agent import create_agent_with_config, list_agents, reset_agent
+from deepagents_cli.agent import (
+    create_agent_with_config,
+    get_system_prompt,
+    list_agents,
+    reset_agent,
+)
 from deepagents_cli.commands import execute_bash_command, handle_command
 from deepagents_cli.config import COLORS, DEEP_AGENTS_ASCII, SessionState, console, create_model
 
@@ -20,48 +25,8 @@ from deepagents_cli.integrations.sandbox_factory import (
     get_default_working_dir,
 )
 from deepagents_cli.tools import fetch_url, http_request, tavily_client, web_search
+from deepagents_cli.token_utils import calculate_baseline_tokens
 from deepagents_cli.ui import TokenTracker, show_help
-
-
-def check_cli_dependencies() -> None:
-    """Check if CLI optional dependencies are installed."""
-    missing = []
-
-    try:
-        import rich
-    except ImportError:
-        missing.append("rich")
-
-    try:
-        import requests
-    except ImportError:
-        missing.append("requests")
-
-    try:
-        import dotenv
-    except ImportError:
-        missing.append("python-dotenv")
-
-    try:
-        import tavily
-    except ImportError:
-        missing.append("tavily-python")
-
-    try:
-        import prompt_toolkit
-    except ImportError:
-        missing.append("prompt-toolkit")
-
-    if missing:
-        print("\n❌ Missing required CLI dependencies!")
-        print("\nThe following packages are required to use the deepagents CLI:")
-        for pkg in missing:
-            print(f"  - {pkg}")
-        print("\nPlease install them with:")
-        print("  pip install deepagents[cli]")
-        print("\nOr install all dependencies:")
-        print("  pip install 'deepagents[cli]'")
-        sys.exit(1)
 
 
 def parse_args():
@@ -154,18 +119,6 @@ async def simple_cli(
             )
         console.print()
 
-    if tavily_client is None:
-        console.print(
-            "[yellow]⚠ Web search disabled:[/yellow] TAVILY_API_KEY not found.",
-            style=COLORS["dim"],
-        )
-        console.print("  To enable web search, set your Tavily API key:", style=COLORS["dim"])
-        console.print("    export TAVILY_API_KEY=your_api_key_here", style=COLORS["dim"])
-        console.print(
-            "  Or add it to your .env file. Get your key at: https://tavily.com",
-            style=COLORS["dim"],
-        )
-        console.print()
 
     console.print("... Ready to code! What would you like to build?", style=COLORS["agent"])
 
@@ -257,19 +210,14 @@ async def _run_agent_session(
         sandbox_type: Type of sandbox being used
         setup_script_path: Path to setup script that was run (if any)
     """
-    # Create agent with conditional tools
-    tools = [http_request, fetch_url]
-    if tavily_client is not None:
-        tools.append(web_search)
+    # Create agent with tools
+    tools = [http_request, fetch_url, web_search]
 
     agent, composite_backend = create_agent_with_config(
         model, assistant_id, tools, sandbox=sandbox_backend, sandbox_type=sandbox_type
     )
 
     # Calculate baseline token count for accurate token tracking
-    from .agent import get_system_prompt
-    from .token_utils import calculate_baseline_tokens
-
     agent_dir = Path.home() / ".deepagents" / assistant_id
     system_prompt = get_system_prompt(sandbox_type=sandbox_type)
     baseline_tokens = calculate_baseline_tokens(model, agent_dir, system_prompt)
@@ -322,7 +270,7 @@ async def main(
                     sandbox_type=sandbox_type,
                     setup_script_path=setup_script_path,
                 )
-        except (ImportError, ValueError, RuntimeError, NotImplementedError) as e:
+        except (ValueError, RuntimeError, NotImplementedError) as e:
             # Sandbox creation failed - fail hard (no silent fallback)
             console.print()
             console.print("[red]❌ Sandbox creation failed[/red]")
@@ -351,9 +299,6 @@ async def main(
 
 def cli_main() -> None:
     """Entry point for console script."""
-    # Check dependencies first
-    check_cli_dependencies()
-
     try:
         args = parse_args()
 

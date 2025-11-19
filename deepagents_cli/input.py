@@ -18,6 +18,7 @@ from prompt_toolkit.document import Document
 from prompt_toolkit.enums import EditingMode
 from prompt_toolkit.formatted_text import HTML
 from prompt_toolkit.key_binding import KeyBindings
+from prompt_toolkit.styles import Style
 
 from .config import COLORS, COMMANDS, SessionState, console
 
@@ -283,8 +284,6 @@ def create_prompt_session(assistant_id: str, session_state: SessionState) -> Pro
         if AT_MENTION_RE.search(text) or SLASH_COMMAND_RE.match(text):
             # Retrigger completion
             buffer.start_completion(select_first=False)
-
-    from prompt_toolkit.styles import Style
 
     # Define styles for the toolbar with full-width background colors
     toolbar_style = Style.from_dict(

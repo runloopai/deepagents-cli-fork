@@ -376,13 +376,8 @@ async def execute_task(
                         # results are hidden from user - agent will process and respond
                         continue
 
-                    # Check if this is an AIMessageChunk
-                    if not hasattr(message, "content_blocks"):
-                        # Fallback for messages without content_blocks
-                        continue
-
                     # Extract token usage if available
-                    if token_tracker and hasattr(message, "usage_metadata"):
+                    if token_tracker:
                         usage = message.usage_metadata
                         if usage:
                             input_toks = usage.get("input_tokens", 0)

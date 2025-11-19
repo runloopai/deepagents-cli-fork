@@ -1,17 +1,17 @@
 """Dev server launcher for deepagents CLI."""
 
 import argparse
-# Point langgraph to the generated module
 import json
 import os
+import shutil
 import sys
 import tempfile
 from pathlib import Path
 
-# Recreate agent without interrupts
 from deepagents import create_deep_agent
 from deepagents.backends.filesystem import FilesystemBackend
-# Create the agent
+from langgraph_api.cli import run_server
+
 from deepagents_cli.agent import create_agent_with_config, get_system_prompt
 from deepagents_cli.agent_memory import AgentMemoryMiddleware
 from deepagents_cli.config import config, console, create_model
@@ -129,10 +129,7 @@ def create_server_agent(
         Configured agent (Pregel graph)
     """
     # Setup tools
-
-    tools = [http_request, fetch_url]
-    if tavily_client is not None:
-        tools.append(web_search)
+    tools = [http_request, fetch_url, web_search]
 
     model = create_model()
 
@@ -153,18 +150,6 @@ def run_dev_server(args) -> None:
         args: Parsed command line arguments
     """
     console.print("\n[bold cyan]🚀 Starting DeepAgents Dev Server[/bold cyan]\n")
-
-    # Validate dependencies
-    try:
-        from langgraph_api.cli import run_server
-    except ImportError:
-        console.print("[red]❌ langgraph-api not installed[/red]")
-        console.print("\nThe dev server requires langgraph-api to be installed.")
-        console.print("Install with:")
-        console.print("  pip install 'langgraph-cli[inmem]'")
-        console.print("\nOr install all deepagents extras:")
-        console.print("  pip install 'deepagents[cli,server]'")
-        sys.exit(1)
 
     # Create a temporary directory for the generated module
     temp_dir = Path(tempfile.mkdtemp(prefix="deepagents_dev_"))
@@ -245,8 +230,6 @@ graph.checkpointer = None
         sys.exit(1)
     finally:
         # Cleanup temp directory
-        import shutil
-
         try:
             shutil.rmtree(temp_dir)
         except Exception:

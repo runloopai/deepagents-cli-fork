@@ -4,6 +4,7 @@ from pathlib import Path
 
 from langchain_core.messages import SystemMessage
 
+from deepagents_cli.agent_memory import LONGTERM_MEMORY_SYSTEM_PROMPT
 from deepagents_cli.config import console
 
 
@@ -56,7 +57,4 @@ def calculate_baseline_tokens(model, agent_dir: Path, system_prompt: str) -> int
 
 def get_memory_system_prompt() -> str:
     """Get the long-term memory system prompt text."""
-    # Import from agent_memory middleware
-    from .agent_memory import LONGTERM_MEMORY_SYSTEM_PROMPT
-
     return LONGTERM_MEMORY_SYSTEM_PROMPT.format(memory_path="/memories/")

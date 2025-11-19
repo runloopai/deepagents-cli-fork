@@ -1,13 +1,5 @@
 """BackendProtocol implementation for Runloop."""
 
-try:
-    import runloop_api_client
-except ImportError:
-    raise ImportError(
-        "runloop_api_client package is required for RunloopBackend. "
-        "Install with `pip install runloop_api_client`."
-    )
-
 import os
 
 from deepagents.backends.protocol import ExecuteResponse
