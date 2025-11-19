@@ -125,6 +125,7 @@ package-runtime:
 	@chmod +x run.sh
 	@echo "This may take a while (venv is large)..."
 	@tar -czf dist/deepagents-cli-runtime.tar.gz \
+		--dereference \
 		--exclude='*.pyc' \
 		--exclude='*.pyo' \
 		--exclude='__pycache__' \
@@ -149,8 +150,12 @@ package-runtime:
 	@ls -lh dist/deepagents-cli-runtime.tar.gz
 	@echo "✓ Created: dist/deepagents-cli-runtime.tar.gz"
 	@echo ""
+	@echo "Verifying archive integrity..."
+	@tar -tzf dist/deepagents-cli-runtime.tar.gz > /dev/null && echo "✓ Archive is valid" || echo "✗ Archive verification failed"
+	@echo ""
 	@echo "⚠️  WARNING: This package is platform-specific!"
-	@echo "   Only extract on same OS/architecture as build machine"
+	@echo "   Only works on: $(shell uname -s) $(shell uname -m)"
+	@echo "   Built for: $(shell file .venv/bin/python3 | cut -d: -f2)"
 	@echo ""
 	@echo "To run after extraction:"
 	@echo "  tar -xzf deepagents-cli-runtime.tar.gz"
@@ -159,6 +164,8 @@ package-runtime:
 	@echo "Or manually:"
 	@echo "  source .venv/bin/activate    # or .venv/Scripts/activate on Windows"
 	@echo "  python -m deepagents_cli --help"
+	@echo ""
+	@echo "For troubleshooting, see: PACKAGING.md"
 
 ######################
 # HELP
