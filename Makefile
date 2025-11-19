@@ -167,6 +167,42 @@ package-runtime:
 	@echo ""
 	@echo "For troubleshooting, see: PACKAGING.md"
 
+package-runtime-linux:
+	@echo "Building Linux runtime package using Docker/Podman (Python 3.12, x86_64)..."
+	@echo "This will take a few minutes (building venv with all dependencies)..."
+	@mkdir -p dist
+	@chmod +x fix-venv-shebangs.sh run.sh
+	@if command -v podman >/dev/null 2>&1; then \
+		CONTAINER_CMD=podman; \
+	elif command -v docker >/dev/null 2>&1; then \
+		CONTAINER_CMD=docker; \
+	else \
+		echo "Error: Neither podman nor docker found. Please install one."; \
+		exit 1; \
+	fi; \
+	echo "Using $$CONTAINER_CMD to build..."; \
+	$$CONTAINER_CMD build --platform linux/amd64 -t deepagents-runtime-builder -f Dockerfile.runtime . && \
+	$$CONTAINER_CMD create --name deepagents-runtime-tmp deepagents-runtime-builder && \
+	$$CONTAINER_CMD cp deepagents-runtime-tmp:/deepagents-cli-runtime-linux.tar.gz ./dist/ && \
+	$$CONTAINER_CMD rm deepagents-runtime-tmp
+	@ls -lh dist/deepagents-cli-runtime-linux.tar.gz
+	@echo "✓ Created: dist/deepagents-cli-runtime-linux.tar.gz"
+	@echo ""
+	@echo "Verifying archive integrity..."
+	@tar -tzf dist/deepagents-cli-runtime-linux.tar.gz > /dev/null && echo "✓ Archive is valid" || echo "✗ Archive verification failed"
+	@echo ""
+	@echo "Package details:"
+	@echo "  Platform: Linux x86_64"
+	@echo "  Python: 3.12"
+	@echo "  Shebangs: Fixed to use /usr/bin/env python3"
+	@echo ""
+	@echo "To use in container:"
+	@echo "  1. Copy tar to container: podman cp dist/deepagents-cli-runtime-linux.tar.gz container:/tmp/"
+	@echo "  2. In container: tar -xzf /tmp/deepagents-cli-runtime-linux.tar.gz"
+	@echo "  3. Run: ./run.sh --help"
+	@echo ""
+	@echo "Note: Container must have Python 3.12 installed"
+
 ######################
 # HELP
 ######################
@@ -186,6 +222,7 @@ help:
 	@echo '-- PACKAGE --'
 	@echo 'package                      - create tar.gz with source only (~259KB, platform-independent)'
 	@echo 'package-runtime              - create tar.gz with venv included (~300MB, platform-specific)'
+	@echo 'package-runtime-linux        - create Linux x86_64 tar.gz with venv (Python 3.12, relocatable)'
 	@echo 'clean                        - remove build artifacts'
 	@echo '-- DOCUMENTATION tasks are from the top-level Makefile --'
 

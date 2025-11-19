@@ -55,6 +55,13 @@ make package
 # Creates: dist/deepagents-cli-source.tar.gz
 ```
 
+**Build Linux runtime package** (for containers, Python 3.12, x86_64):
+```bash
+make package-runtime-linux
+# Creates: dist/deepagents-cli-runtime-linux.tar.gz
+# Uses Podman to build a relocatable venv with fixed shebangs
+```
+
 **Clean build artifacts**:
 ```bash
 make clean
@@ -62,7 +69,7 @@ make clean
 
 ### Distribution Options
 
-There are two ways to package the application:
+There are three ways to package the application:
 
 #### Option 1: Source Package (Recommended for Cross-Platform)
 
@@ -113,6 +120,37 @@ python -m deepagents_cli --help
 ```
 
 ⚠️ **Important**: Runtime package only works on the same OS/architecture as the build machine.
+
+#### Option 3: Linux Runtime Package (Recommended for Containers)
+
+Creates a relocatable Linux x86_64 runtime with Python 3.12 and fixed shebangs (~45MB):
+
+```bash
+make package-runtime-linux
+```
+
+**What's included:**
+- Source code
+- Complete `.venv/` built for Linux x86_64 with Python 3.12
+- Fixed shebangs using `/usr/bin/env python3`
+- `run.sh` convenience script
+
+**Usage:**
+```bash
+# Extract and run in Linux container
+tar -xzf deepagents-cli-runtime-linux.tar.gz
+./run.sh --help
+./run.sh --auto-approve
+./run.sh dev --allow-blocking
+```
+
+**Benefits:**
+- Fast startup (no rebuild needed)
+- Relocatable (works with container's Python 3.12)
+- Built from macOS using Podman
+- Ready for Linux x86_64 containers
+
+⚠️ **Important**: Container must have Python 3.12 installed (e.g., `python:3.12-slim` base image).
 
 ### Cross-Platform Builds
 

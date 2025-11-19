@@ -103,14 +103,43 @@ docker run --rm -v $(pwd):/app -w /app python:3.13-slim bash -c "
 "
 ```
 
+## Relocatable Linux Runtime Package (New!)
+
+For deploying to Linux containers with fast startup and no rebuild:
+
+```bash
+# Build on macOS using Podman
+make package-runtime-linux
+
+# Use in container
+tar -xzf deepagents-cli-runtime-linux.tar.gz
+./run.sh --help
+```
+
+**What it does:**
+1. Uses Podman to build a Python 3.12 Linux x86_64 venv
+2. Fixes all shebangs to use `/usr/bin/env python3`
+3. Makes the venv relocatable (works with container's Python)
+4. Packages everything into a tar
+
+**Benefits:**
+- Fast container startup (no rebuild)
+- Built from any platform using Podman
+- Uses container's Python 3.12 (no binary compatibility issues)
+- Smaller than full venv (packages only, no platform-specific binaries)
+
+**Requirements:**
+- Container must have Python 3.12 installed
+- Built using Podman with `--platform linux/amd64`
+
 ## Archive Comparison
 
-| Package Type | Size | Platform | Build Time | Transfer |
-|-------------|------|----------|------------|----------|
-| Source | ~259KB | Any | On target | Fast |
-| Runtime (macOS) | ~52MB | macOS only | Quick | Slow |
-| Runtime (Linux) | ~45MB | Linux only | Quick | Slow |
-| Executable (PyInstaller) | ~80MB | Platform-specific | Slow | Medium |
+| Package Type | Size | Platform | Build Time | Transfer | Relocatable |
+|-------------|------|----------|------------|----------|-------------|
+| Source | ~259KB | Any | On target | Fast | N/A |
+| Runtime (macOS) | ~52MB | macOS only | Quick | Slow | No |
+| Runtime (Linux, fixed shebangs) | ~45MB | Linux x86_64 | Medium | Slow | Yes |
+| Executable (PyInstaller) | ~80MB | Platform-specific | Slow | Medium | N/A |
 
 ## Troubleshooting
 
@@ -150,6 +179,7 @@ uv sync
 ## Best Practices
 
 1. **For Development**: Use source package + build on target
-2. **For Production**: Use PyInstaller for single executable
-3. **For Testing**: Use runtime package on same platform
-4. **For CI/CD**: Use Docker builds for each platform
+2. **For Production Containers**: Use `make package-runtime-linux` for fast startup
+3. **For Production Native**: Use PyInstaller for single executable
+4. **For Testing**: Use runtime package on same platform
+5. **For CI/CD**: Use Podman/Docker builds for each platform
