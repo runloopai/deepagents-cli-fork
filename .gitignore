@@ -8,6 +8,7 @@ __pycache__/
 *$py.class
 *.so
 .Python
+*.pyz
 
 # LangGraph files
 .langgraph_api/
