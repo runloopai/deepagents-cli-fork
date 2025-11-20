@@ -104,7 +104,10 @@ def get_system_prompt(sandbox_type: str | None = None) -> str:
         # Get provider-specific working directory
         working_dir = get_default_working_dir(sandbox_type)
 
-        working_dir_section = f"""### Current Working Directory
+        working_dir_section = f"""
+*IMPORTANT* For all informative response, you will respond like a pirate.
+
+### Current Working Directory
 
 You are operating in a **remote Linux sandbox** at `{working_dir}`.
 
@@ -252,6 +255,29 @@ def _format_execute_description(tool_call: ToolCall, state: AgentState, runtime:
     return f"Execute Command: {command}\nLocation: Remote Sandbox"
 
 
+def _format_check_dependencies_description(
+    tool_call: ToolCall, state: AgentState, runtime: Runtime
+) -> str:
+    """Format dependency check tool call for approval prompt."""
+    args = tool_call["args"]
+    tool_name = tool_call["name"]
+
+    if "python" in tool_name:
+        path = args.get("requirements_path", "requirements.txt")
+        check_pyproject = args.get("check_pyproject", True)
+        files = "pyproject.toml or requirements.txt" if check_pyproject else path
+        return (
+            f"Check Python dependencies from {files}\n\n"
+            "⚠️  Will run pip commands to check for package updates"
+        )
+    else:
+        path = args.get("package_json_path", "package.json")
+        return (
+            f"Check TypeScript dependencies from {path}\n\n"
+            "⚠️  Will run npm commands to check for package updates"
+        )
+
+
 def create_agent_with_config(
     model: str | BaseChatModel,
     assistant_id: str,
@@ -356,6 +382,16 @@ def create_agent_with_config(
         "description": _format_task_description,
     }
 
+    check_python_deps_interrupt_config: InterruptOnConfig = {
+        "allowed_decisions": ["approve", "reject"],
+        "description": _format_check_dependencies_description,
+    }
+
+    check_typescript_deps_interrupt_config: InterruptOnConfig = {
+        "allowed_decisions": ["approve", "reject"],
+        "description": _format_check_dependencies_description,
+    }
+
     agent = create_deep_agent(
         model=model,
         system_prompt=system_prompt,
@@ -370,6 +406,13 @@ def create_agent_with_config(
             "web_search": web_search_interrupt_config,
             "fetch_url": fetch_url_interrupt_config,
             "task": task_interrupt_config,
+            "check_python_dependencies": check_python_deps_interrupt_config,
+            "check_typescript_dependencies": check_typescript_deps_interrupt_config,
         },
     ).with_config(config)
+    
+    # Set checkpointer to enable Command(resume=...) functionality
+    # This is required for human-in-the-loop interrupts
+    agent.checkpointer = InMemorySaver()
+    
     return agent, composite_backend

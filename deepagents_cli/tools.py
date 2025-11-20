@@ -1,6 +1,9 @@
 """Custom tools for the CLI agent."""
 
+import json
 import os
+import subprocess
+from pathlib import Path
 from typing import Any, Literal
 
 import requests
@@ -180,3 +183,167 @@ def fetch_url(url: str, timeout: int = 30) -> dict[str, Any]:
         }
     except Exception as e:
         return {"error": f"Fetch URL error: {e!s}", "url": url}
+
+
+def check_python_dependencies(
+    requirements_path: str = "requirements.txt",
+    check_pyproject: bool = True,
+) -> dict[str, Any]:
+    """Check Python dependencies and suggest upgrades.
+
+    This tool analyzes Python dependencies from requirements.txt or pyproject.toml
+    and suggests available upgrades using pip.
+
+    Args:
+        requirements_path: Path to requirements.txt file (default: "requirements.txt")
+        check_pyproject: Also check pyproject.toml if it exists (default: True)
+
+    Returns:
+        Dictionary containing:
+        - dependencies: List of current dependencies with versions
+        - outdated: List of packages that have newer versions available
+        - upgrades: Suggested upgrade commands
+        - source: Which file was analyzed
+
+    Example:
+        >>> check_python_dependencies()
+        {
+            "dependencies": [{"name": "requests", "current": "2.28.0", "latest": "2.31.0"}],
+            "outdated": ["requests"],
+            "upgrades": ["pip install requests==2.31.0"],
+            "source": "requirements.txt"
+        }
+    """
+    try:
+        result: dict[str, Any] = {
+            "dependencies": [],
+            "outdated": [],
+            "upgrades": [],
+            "source": None,
+        }
+
+        # Check which dependency file exists
+        req_path = Path(requirements_path)
+        pyproject_path = Path("pyproject.toml")
+
+        if check_pyproject and pyproject_path.exists():
+            result["source"] = "pyproject.toml"
+        elif req_path.exists():
+            result["source"] = str(requirements_path)
+        else:
+            return {
+                "error": f"No dependency file found. Checked: {requirements_path}, pyproject.toml"
+            }
+
+        # Check for outdated packages
+        outdated_result = subprocess.run(
+            ["pip", "list", "--outdated", "--format=json"],
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=30,
+        )
+        outdated = json.loads(outdated_result.stdout)
+
+        # Build response
+        for pkg in outdated:
+            result["dependencies"].append({
+                "name": pkg["name"],
+                "current": pkg["version"],
+                "latest": pkg["latest_version"],
+            })
+            result["outdated"].append(pkg["name"])
+            result["upgrades"].append(f"pip install {pkg['name']}=={pkg['latest_version']}")
+
+        if not result["outdated"]:
+            result["message"] = "All dependencies are up to date!"
+
+        return result
+
+    except subprocess.CalledProcessError as e:
+        return {"error": f"Failed to check dependencies: {e.stderr}"}
+    except subprocess.TimeoutExpired:
+        return {"error": "Command timed out after 30 seconds"}
+    except Exception as e:
+        return {"error": f"Error checking Python dependencies: {e!s}"}
+
+
+def check_typescript_dependencies(
+    package_json_path: str = "package.json",
+) -> dict[str, Any]:
+    """Check TypeScript/Node.js dependencies and suggest upgrades.
+
+    This tool analyzes dependencies from package.json and suggests available
+    upgrades using npm.
+
+    Args:
+        package_json_path: Path to package.json file (default: "package.json")
+
+    Returns:
+        Dictionary containing:
+        - dependencies: List of current dependencies with versions
+        - outdated: List of packages that have newer versions available
+        - upgrades: Suggested upgrade commands
+        - source: Which file was analyzed
+
+    Example:
+        >>> check_typescript_dependencies()
+        {
+            "dependencies": [{"name": "typescript", "current": "4.9.0", "wanted": "4.9.5", "latest": "5.3.0"}],
+            "outdated": ["typescript"],
+            "upgrades": ["npm install typescript@5.3.0"],
+            "source": "package.json"
+        }
+    """
+    try:
+        pkg_path = Path(package_json_path)
+
+        if not pkg_path.exists():
+            return {"error": f"No package.json found at: {package_json_path}"}
+
+        result: dict[str, Any] = {
+            "dependencies": [],
+            "outdated": [],
+            "upgrades": [],
+            "source": package_json_path,
+        }
+
+        # Check for outdated packages using npm outdated
+        outdated_result = subprocess.run(
+            ["npm", "outdated", "--json"],
+            capture_output=True,
+            text=True,
+            cwd=pkg_path.parent,
+            timeout=60,
+        )
+
+        # npm outdated returns exit code 1 when there are outdated packages
+        if outdated_result.stdout:
+            try:
+                outdated = json.loads(outdated_result.stdout)
+
+                for pkg_name, pkg_info in outdated.items():
+                    result["dependencies"].append({
+                        "name": pkg_name,
+                        "current": pkg_info.get("current", "N/A"),
+                        "wanted": pkg_info.get("wanted", "N/A"),
+                        "latest": pkg_info.get("latest", "N/A"),
+                    })
+                    result["outdated"].append(pkg_name)
+                    result["upgrades"].append(
+                        f"npm install {pkg_name}@{pkg_info.get('latest', 'latest')}"
+                    )
+            except json.JSONDecodeError:
+                return {"error": "Failed to parse npm outdated output"}
+
+        if not result["outdated"]:
+            result["message"] = "All dependencies are up to date!"
+
+        return result
+
+    except FileNotFoundError:
+        return {"error": "npm is not installed or not in PATH"}
+    except subprocess.TimeoutExpired:
+        return {"error": "npm command timed out after 60 seconds"}
+    except Exception as e:
+        return {"error": f"Error checking TypeScript dependencies: {e!s}"}

@@ -15,7 +15,14 @@ from langgraph_api.cli import run_server
 from deepagents_cli.agent import create_agent_with_config, get_system_prompt
 from deepagents_cli.agent_memory import AgentMemoryMiddleware
 from deepagents_cli.config import config, console, create_model
-from deepagents_cli.tools import fetch_url, http_request, tavily_client, web_search
+from deepagents_cli.tools import (
+    check_python_dependencies,
+    check_typescript_dependencies,
+    fetch_url,
+    http_request,
+    tavily_client,
+    web_search,
+)
 
 
 def add_dev_parser(subparsers: argparse._SubParsersAction) -> None:
@@ -129,7 +136,13 @@ def create_server_agent(
         Configured agent (Pregel graph)
     """
     # Setup tools
-    tools = [http_request, fetch_url, web_search]
+    tools = [
+        http_request,
+        fetch_url,
+        web_search,
+        check_python_dependencies,
+        check_typescript_dependencies,
+    ]
 
     model = create_model()
 
@@ -174,7 +187,7 @@ graph = create_server_agent(
     sandbox_id={args.sandbox_id!r},
     sandbox_setup={args.sandbox_setup!r},
 )
-graph.checkpointer = None
+# Checkpointer is already set by create_agent_with_config
 '''
 
         # Write the module to a file

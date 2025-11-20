@@ -24,7 +24,14 @@ from deepagents_cli.integrations.sandbox_factory import (
     create_sandbox,
     get_default_working_dir,
 )
-from deepagents_cli.tools import fetch_url, http_request, tavily_client, web_search
+from deepagents_cli.tools import (
+    check_python_dependencies,
+    check_typescript_dependencies,
+    fetch_url,
+    http_request,
+    tavily_client,
+    web_search,
+)
 from deepagents_cli.token_utils import calculate_baseline_tokens
 from deepagents_cli.ui import TokenTracker, show_help
 
@@ -211,7 +218,13 @@ async def _run_agent_session(
         setup_script_path: Path to setup script that was run (if any)
     """
     # Create agent with tools
-    tools = [http_request, fetch_url, web_search]
+    tools = [
+        http_request,
+        fetch_url,
+        web_search,
+        check_python_dependencies,
+        check_typescript_dependencies,
+    ]
 
     agent, composite_backend = create_agent_with_config(
         model, assistant_id, tools, sandbox=sandbox_backend, sandbox_type=sandbox_type
