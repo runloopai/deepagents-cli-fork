@@ -20,7 +20,6 @@ from deepagents_cli.tools import (
     check_typescript_dependencies,
     fetch_url,
     http_request,
-    tavily_client,
     web_search,
 )
 

@@ -10,10 +10,6 @@ import requests
 from markdownify import markdownify
 from tavily import TavilyClient
 
-# Initialize Tavily client only if API key is available
-tavily_api_key = os.environ.get("TAVILY_API_KEY")
-tavily_client = TavilyClient(api_key=tavily_api_key) if tavily_api_key else None
-
 
 def http_request(
     url: str,
@@ -123,12 +119,16 @@ def web_search(
     4. Cite sources by mentioning the page titles or URLs
     5. NEVER show the raw JSON to the user - always provide a formatted response
     """
-    if tavily_client is None:
+    # Create client locally to avoid pickling issues with global instance
+    tavily_api_key = os.environ.get("TAVILY_API_KEY")
+    if not tavily_api_key:
         return {
             "error": "TAVILY_API_KEY environment variable is not set. Web search is unavailable.",
             "query": query,
         }
+
     try:
+        tavily_client = TavilyClient(api_key=tavily_api_key)
         return tavily_client.search(
             query,
             max_results=max_results,
