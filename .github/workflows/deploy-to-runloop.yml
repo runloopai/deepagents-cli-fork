@@ -13,6 +13,7 @@ jobs:
         id: deploy
         uses: runloopai/deploy-agent@main
         with:
+          agent-version: ${{ github.sha }}
           api-key: ${{ secrets.RUNLOOP_API_KEY }}
           source-type: "git"
           git-repository: ${{ github.server_url }}/${{ github.repository }}
