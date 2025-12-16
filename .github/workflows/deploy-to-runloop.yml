@@ -11,7 +11,7 @@ jobs:
     steps:
       - name: Deploy agent to Runloop
         id: deploy
-        uses: runloopai/deploy-agent@main
+        uses: runloopai/deploy-agent@v1.0.0
         with:
           agent-version: ${{ github.sha }}
           api-key: ${{ secrets.RUNLOOP_API_KEY }}
